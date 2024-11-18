@@ -1,18 +1,10 @@
-const Post = require('../../models/Post');
+const Post = require("../../models/Post");
+const Tag = require("../../models/Tag");
 
 exports.fetchPost = async (postId, next) => {
   try {
     const post = await Post.findById(postId);
     return post;
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.postsCreate = async (req, res) => {
-  try {
-    const newPost = await Post.create(req.body);
-    res.status(201).json(newPost);
   } catch (error) {
     next(error);
   }
@@ -38,8 +30,26 @@ exports.postsUpdate = async (req, res) => {
 
 exports.postsGet = async (req, res) => {
   try {
-    const posts = await Post.find();
+    const posts = await Post.find()
+      .populate("alkatib", "-postat -__v")
+      .populate("tamqat", "-postat -__v");
     res.json(posts);
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.tagAdd = async (req, res, next) => {
+  const { tagId } = req.params;
+
+  try {
+    await Post.findByIdAndUpdate(req.post.id, {
+      $push: { tamqat: tagId },
+    });
+    await Tag.findByIdAndUpdate(tagId, {
+      $push: { postat: req.post.id },
+    });
+    res.status(204).end();
   } catch (error) {
     next(error);
   }
